@@ -1,0 +1,278 @@
+{
+  "name": "AI Customer Support Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -384,
+        -32
+      ],
+      "id": "b7aa714e-1ffb-491c-a943-bd90d3f20012",
+      "name": "Telegram Trigger",
+      "webhookId": "63443594-1fff-41ff-b313-02add931f96b",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr1N7Xiv7Yt2korJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text }}If the user asks to speak with a human, complains, or asks for support you cannot provide, start your answer with [HUMAN].",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        80,
+        -32
+      ],
+      "id": "97214cb9-74dc-4ede-abb4-87416f69c821",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        48,
+        240
+      ],
+      "id": "24290199-8ce9-4808-83a4-f307c5690285",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "IKYfNXSOiH4Li3FP",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        208,
+        256
+      ],
+      "id": "826ffd29-969d-43c0-a930-2d7f8b2bfc2e",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1M00LzqjXH0DlN5mUidEGY-nt7euJN1wiootMMIE_swU",
+          "mode": "list",
+          "cachedResultName": "SHEET1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M00LzqjXH0DlN5mUidEGY-nt7euJN1wiootMMIE_swU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M00LzqjXH0DlN5mUidEGY-nt7euJN1wiootMMIE_swU/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -160,
+        -32
+      ],
+      "id": "b20738b5-42df-45e2-aa2b-98d1767e311c",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "sLE3zEWazxrWyD3M",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "39157a26-43e1-48d7-a8eb-37298389c5fd",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "[HUMAN]",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        384,
+        -16
+      ],
+      "id": "2f52d8f9-a2a6-4775-8470-3ffe539fd7b9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('AI Agent').item.json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        -128
+      ],
+      "id": "7685ded6-576e-4e0b-bc2f-6cf32e416a68",
+      "name": "Send a text message",
+      "webhookId": "681ec0b8-50f9-47cb-9ffa-efc51cca839c",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr1N7Xiv7Yt2korJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('AI Agent').item.json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        112
+      ],
+      "id": "f5282bb0-39fc-47c2-b739-5f89f9e1fd89",
+      "name": "Send a text message1",
+      "webhookId": "8c9dc3af-7024-4b75-9c14-abbd455e0fba",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr1N7Xiv7Yt2korJ",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d7acedae-5510-4a36-afaf-e860c221021f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f9d9d3c782c0a0e02651485c6da4f04eeb66c8e2cc8c4ac63fcd126fce2dbe3d"
+  },
+  "nodeGroups": [],
+  "id": "zMAdmA3PEDyfylei",
+  "tags": []
+}
